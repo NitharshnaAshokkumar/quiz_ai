@@ -45,7 +45,7 @@ export default function DashboardPage() {
         })
         .finally(() => setDataLoading(false));
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, router]);
 
   if (loading || dataLoading) {
     return (

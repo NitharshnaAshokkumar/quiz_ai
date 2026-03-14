@@ -20,7 +20,7 @@ export default function LoginPage() {
     try {
       await login(form.email, form.password);
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.detail || "Invalid email or password.");
     } finally {
       setLoading(false);

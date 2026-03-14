@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { quizzesApi, attemptsApi } from "@/lib/api";
 import { Quiz, Question } from "@/types";
@@ -17,6 +17,7 @@ function Timer({ onTimerRef }: { onTimerRef: (ref: { getSeconds: () => number })
     }, 1000);
     onTimerRef({ getSeconds: () => ref.current });
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const mins = Math.floor(seconds / 60).toString().padStart(2, "0");

@@ -38,7 +38,7 @@ export default function AttemptDetailPage({ params }: { params: { id: string } }
       setAttempt(att);
       const reviewRes = await quizzesApi.review(att.quiz);
       const qs: ReviewQuestion[] = reviewRes.data.questions.map((q: ReviewQuestion) => {
-        const userAns = att.answers.find((a: any) => a.question === q.id);
+        const userAns = att.answers.find((a: { question: number; selected_option: string; is_correct: boolean }) => a.question === q.id);
         return { ...q, selected: userAns?.selected_option, is_correct: userAns?.is_correct };
       });
       setQuestions(qs);

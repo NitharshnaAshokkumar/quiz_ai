@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Zap, LogOut, LayoutDashboard, PlusCircle } from "lucide-react";
 
 export default function Navbar() {
-  const { user, logout, isAuthenticated, loading } = useAuth();
+  const { logout, isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {

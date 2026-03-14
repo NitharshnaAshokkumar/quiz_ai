@@ -24,6 +24,8 @@ Render is a platform-as-a-service (PaaS) that makes deploying Django apps very s
 3. Name it (e.g., `quiz-db`), select the **Free** instance type, and click **Create Database**.
 4. Once created, copy the **Internal Database URL** (we'll use this later).
 
+postgresql://quiz_db_fs0m_user:d0IgITL19DG9YmdYW7Wdymadyii4U0Fd@dpg-d6qjb4q4d50c73bea5ag-a/quiz_db_fs0m
+
 ### Step 2: Deploy the Django Web Service
 1. Click **New** -> **Web Service**.
 2. Connect your GitHub account and select your `quiz-ai` repository.
@@ -53,6 +55,7 @@ Click **Create Web Service**. Render will now install dependencies, run migratio
 - Wait until it says "Live".
 - Note the public URL provided by Render (e.g., `https://quizai-backend-xxxx.onrender.com`).
 
+https://quizai-backend-9bch.onrender.com
 ---
 
 ## Part 3: Deploy Frontend to Vercel

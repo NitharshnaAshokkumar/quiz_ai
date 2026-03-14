@@ -23,7 +23,7 @@ export default function RegisterPage() {
     try {
       await authApi.register(form);
       router.push("/login?registered=1");
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       const data = err.response?.data;
       if (typeof data === "object") {
         const msgs = Object.entries(data)

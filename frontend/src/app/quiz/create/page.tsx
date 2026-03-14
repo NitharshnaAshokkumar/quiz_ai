@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { quizzesApi } from "@/lib/api";
-import { Brain, Loader2, Sparkles, ChevronDown } from "lucide-react";
+import { Brain, Loader2, Sparkles } from "lucide-react";
 
 const difficulties = [
   { value: "easy", label: "Easy", desc: "Foundational recall", color: "text-emerald-400 border-emerald-500/40" },
@@ -33,7 +33,7 @@ export default function CreateQuizPage() {
     try {
       const res = await quizzesApi.create({ topic: topic.trim(), difficulty, num_questions: numQuestions });
       router.push(`/quiz/${res.data.id}`);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || "Failed to generate quiz. Please check your API key and try again.");
     } finally {
       setGenerating(false);
