@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,7 +14,7 @@ class AttemptStartView(APIView):
 
     def post(self, request, quiz_id):
         try:
-            quiz = Quiz.objects.filter(user=request.user).get(pk=quiz_id)
+            quiz = Quiz.objects.filter(models.Q(user=request.user) | models.Q(is_public=True)).get(pk=quiz_id)
         except Quiz.DoesNotExist:
             return Response({'error': 'Quiz not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -67,6 +68,17 @@ class AttemptSubmitView(APIView):
         attempt.completed_at = timezone.now()
         attempt.save()
 
+        # Try to send the quiz result email synchronously
+        try:
+            print("--- ATTEMPTING TO SEND EMAIL ---")
+            from .emails import send_quiz_result_email
+            send_quiz_result_email(attempt)
+            print("--- EMAIL SUCCESSFULLY SENT ---")
+        except Exception as e:
+            import traceback
+            print(f"--- FAILED TO SEND EMAIL: {e} ---")
+            traceback.print_exc()
+
         return Response(AttemptSerializer(attempt).data, status=status.HTTP_200_OK)
 
 
@@ -86,3 +98,55 @@ class AttemptDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Attempt.objects.filter(user=self.request.user)
+
+
+class AttemptStatsView(APIView):
+    """Returns analytics data for the user's progress."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        attempts = Attempt.objects.filter(user=request.user, is_completed=True).order_by('completed_at')
+        
+        # Calculate stats
+        total_quizzes = attempts.count()
+        if total_quizzes == 0:
+            return Response({
+                'total_quizzes': 0,
+                'average_score': 0,
+                'history': [],
+                'topics': {}
+            })
+            
+        average_score = sum(a.percentage for a in attempts) / total_quizzes
+        
+        # Prepare charts data
+        history_data = []
+        topics_data = {}
+        
+        for a in attempts:
+            history_data.append({
+                'date': a.completed_at.strftime("%Y-%m-%d"),
+                'percentage': a.percentage,
+                'topic': a.quiz.topic
+            })
+            
+            topic = a.quiz.topic
+            if topic not in topics_data:
+                topics_data[topic] = {'attempts': 0, 'total_percentage': 0}
+            topics_data[topic]['attempts'] += 1
+            topics_data[topic]['total_percentage'] += a.percentage
+            
+        # Format topic radar chart data
+        radar_data = []
+        for topic, data in topics_data.items():
+            radar_data.append({
+                'topic': topic,
+                'average': round(data['total_percentage'] / data['attempts'], 2)
+            })
+            
+        return Response({
+            'total_quizzes': total_quizzes,
+            'average_score': round(average_score, 2),
+            'history': history_data[-20:], # Last 20 attempts for line chart
+            'topics': radar_data
+        })

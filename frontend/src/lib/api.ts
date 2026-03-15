@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://quizai-backend-9bch.onrender.com/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -54,9 +54,14 @@ export const authApi = {
 export const quizzesApi = {
   list: () => api.get("/quizzes/"),
   get: (id: number) => api.get(`/quizzes/${id}/`),
-  create: (data: { topic: string; difficulty: string; num_questions: number }) =>
+  create: (data: { topic: string; difficulty: string; num_questions: number; is_public: boolean }) =>
     api.post("/quizzes/create/", data),
   review: (id: number) => api.get(`/quizzes/${id}/review/`),
+  leaderboard: (id: number) => api.get(`/quizzes/${id}/leaderboard/`),
+  getSchedules: () => api.get("/quizzes/schedules/"),
+  createSchedule: (data: { topic: string; difficulty: string; frequency: string }) =>
+    api.post("/quizzes/schedules/", data),
+  deleteSchedule: (id: number) => api.delete(`/quizzes/schedules/${id}/`),
 };
 
 // ── Attempts ──────────────────────────────────────────
@@ -68,6 +73,7 @@ export const attemptsApi = {
   ) => api.post(`/attempts/${attemptId}/submit/`, data),
   history: () => api.get("/attempts/history/"),
   detail: (id: number) => api.get(`/attempts/${id}/`),
+  stats: () => api.get("/attempts/stats/"),
 };
 
 export default api;

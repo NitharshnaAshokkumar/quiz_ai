@@ -13,6 +13,7 @@ class Quiz(models.Model):
     topic = models.CharField(max_length=255)
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
     num_questions = models.IntegerField(default=5)
+    is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -20,6 +21,19 @@ class Quiz(models.Model):
 
     def __str__(self):
         return f"{self.topic} ({self.difficulty}) - {self.user.email}"
+
+
+class QuizSchedule(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='quiz_schedules')
+    topic = models.CharField(max_length=200)
+    difficulty = models.CharField(max_length=20, choices=Quiz.DIFFICULTY_CHOICES, default='medium')
+    frequency = models.CharField(max_length=10, choices=[('daily', 'Daily'), ('weekly', 'Weekly')], default='daily')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.topic} ({self.frequency})"
 
 
 class Question(models.Model):

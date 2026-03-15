@@ -17,6 +17,7 @@ export default function CreateQuizPage() {
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
+  const [isPublic, setIsPublic] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +32,7 @@ export default function CreateQuizPage() {
     setError("");
     setGenerating(true);
     try {
-      const res = await quizzesApi.create({ topic: topic.trim(), difficulty, num_questions: numQuestions });
+      const res = await quizzesApi.create({ topic: topic.trim(), difficulty, num_questions: numQuestions, is_public: isPublic });
       router.push(`/quiz/${res.data.id}`);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || "Failed to generate quiz. Please check your API key and try again.");
@@ -96,6 +97,18 @@ export default function CreateQuizPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Public Option */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 transition-all">
+              <div>
+                <label className="block text-sm font-medium text-slate-200">Public Quiz?</label>
+                <div className="text-xs text-slate-500 mt-0.5">Allow anyone with the link to take this quiz and view its leaderboard.</div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-500"></div>
+              </label>
             </div>
 
             {/* Number of questions */}

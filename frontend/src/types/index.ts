@@ -32,6 +32,8 @@ export interface Quiz {
   topic: string;
   difficulty: "easy" | "medium" | "hard";
   num_questions: number;
+  is_public: boolean;
+  teacher_name?: string;
   created_at: string;
   questions: Question[];
   question_count: number;
@@ -49,6 +51,16 @@ export interface Attempt {
   started_at: string;
   completed_at: string | null;
   is_completed: boolean;
+}
+
+export interface QuizSchedule {
+  id: number;
+  topic: string;
+  difficulty: "easy" | "medium" | "hard";
+  frequency: "daily" | "weekly";
+  is_active: boolean;
+  created_at: string;
+  last_sent_at: string | null;
 }
 
 export interface AttemptDetail extends Attempt {

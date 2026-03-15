@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { attemptsApi, quizzesApi } from "@/lib/api";
 import { AttemptDetail } from "@/types";
-import { Trophy, Clock, Target, CheckCircle2, XCircle, ChevronDown, ChevronUp, ArrowLeft, PlusCircle } from "lucide-react";
+import { Trophy, Clock, Target, CheckCircle2, XCircle, ChevronDown, ChevronUp, ArrowLeft, PlusCircle, RotateCcw, Share2, Crown, Medal } from "lucide-react";
 
 interface ReviewQuestion {
   id: number;
@@ -30,9 +30,12 @@ export default function AttemptDetailPage({ params }: { params: { id: string } }
   const [attempt, setAttempt] = useState<AttemptDetail | null>(null);
   const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState<AttemptDetail[]>([]);
+  const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     attemptsApi.detail(attemptId).then(async (res) => {
       const att = res.data;
       setAttempt(att);
@@ -42,8 +45,24 @@ export default function AttemptDetailPage({ params }: { params: { id: string } }
         return { ...q, selected: userAns?.selected_option, is_correct: userAns?.is_correct };
       });
       setQuestions(qs);
+
+      // Try fetching leaderboard (only works if quiz is public)
+      try {
+        const lbRes = await quizzesApi.leaderboard(att.quiz);
+        setLeaderboard(lbRes.data);
+      } catch {
+        // Not public or error, ignore
+      }
     }).finally(() => setLoading(false));
   }, [attemptId]);
+
+  const handleShare = () => {
+    if (!attempt) return;
+    const url = `${window.location.origin}/quiz/${attempt.quiz}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -97,13 +116,69 @@ export default function AttemptDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
-        <Link
-          href="/quiz/create"
-          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
-        >
-          <PlusCircle className="w-4 h-4" /> Take Another Quiz
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all"
+          >
+            <Share2 className="w-4 h-4" /> {copied ? "Link Copied!" : "Share Quiz"}
+          </button>
+          <Link
+            href={`/quiz/${attempt.quiz}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600/20 text-violet-300 hover:bg-violet-600 hover:text-white border border-violet-500/30 text-sm font-medium transition-all"
+          >
+            <RotateCcw className="w-4 h-4" /> Retake Quiz
+          </Link>
+          <Link
+            href="/quiz/create"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
+          >
+            <PlusCircle className="w-4 h-4" /> New Quiz
+          </Link>
+        </div>
       </div>
+
+      {/* Leaderboard Section */}
+      {leaderboard.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-400" /> Leaderboard (Top 10)
+          </h2>
+          <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+            <div className="divide-y divide-white/5">
+              {leaderboard.map((lbAttempt, idx) => (
+                <div key={lbAttempt.id} className={`flex items-center justify-between p-4 ${lbAttempt.id === attempt.id ? 'bg-violet-500/10' : 'hover:bg-white/5'} transition-colors`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      idx === 0 ? "bg-amber-400/20 text-amber-400" :
+                      idx === 1 ? "bg-slate-300/20 text-slate-300" :
+                      idx === 2 ? "bg-amber-700/20 text-amber-600" :
+                      "bg-white/5 text-slate-400"
+                    }`}>
+                      {idx === 0 ? <Crown className="w-4 h-4" /> : idx + 1}
+                    </div>
+                    <div>
+                      <div className="font-medium text-white flex items-center gap-2">
+                        {lbAttempt.percentage.toFixed(0)}% Score
+                        {lbAttempt.id === attempt.id && <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300">You</span>}
+                      </div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3" /> {formatTime(lbAttempt.time_taken)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Medal className={`w-5 h-5 ${
+                      lbAttempt.percentage >= 80 ? "text-emerald-400" : 
+                      lbAttempt.percentage >= 60 ? "text-amber-400" : "text-slate-600"
+                    }`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Question review */}
       <h2 className="text-lg font-semibold text-white mb-4">Question Review</h2>
